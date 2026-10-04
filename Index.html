@@ -8,23 +8,35 @@
 
 <style>
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:Arial,sans-serif;
   background:#f4f6f8;
   color:#222;
 }
+
 header{
   background:#111827;
   color:white;
   padding:18px;
   text-align:center;
 }
+
+header h1{
+  margin:0 0 6px;
+}
+
+header p{
+  margin:0;
+}
+
 .container{
   max-width:1100px;
   margin:auto;
   padding:15px;
 }
+
 .card{
   background:white;
   padding:18px;
@@ -32,56 +44,107 @@ header{
   border-radius:12px;
   box-shadow:0 2px 8px #0001;
 }
-input,button,select{
+
+input,button{
   width:100%;
   padding:12px;
   margin:6px 0;
   border:1px solid #ddd;
   border-radius:8px;
+  font-size:15px;
 }
+
 button{
   background:#111827;
   color:white;
   border:0;
   cursor:pointer;
 }
-button:hover{opacity:.9}
+
+button:hover{
+  opacity:.9;
+}
+
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
   gap:12px;
 }
+
 .stat{
   padding:20px;
   border-radius:10px;
   background:#eef2ff;
 }
+
+.stat h3{
+  margin-top:0;
+}
+
+.stat h2{
+  margin-bottom:0;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
   margin-top:10px;
 }
+
 th,td{
   padding:10px;
   border-bottom:1px solid #ddd;
   text-align:left;
 }
+
 .total{
   font-size:22px;
   font-weight:bold;
   text-align:right;
+  margin:15px 0;
 }
+
 nav{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:6px;
   margin-bottom:15px;
 }
+
 nav button{
   font-size:13px;
 }
-.section{display:none}
-.section.active{display:block}
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+}
+
+.status{
+  padding:12px;
+  background:#f3f4f6;
+  border-radius:8px;
+  margin-top:10px;
+}
+
+@media(max-width:600px){
+
+  nav{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  table{
+    font-size:13px;
+  }
+
+  th,td{
+    padding:7px;
+  }
+
+}
 </style>
 </head>
 
@@ -89,151 +152,251 @@ nav button{
 
 <header>
   <h1>🧾 Chingari Billing</h1>
-  <p>Simple Billing & Stock Management</p>
+  <p>Billing & Stock Management</p>
 </header>
 
 <div class="container">
 
 <nav>
-<button onclick="showSection('dashboard')">Dashboard</button>
-<button onclick="showSection('billing')">Billing</button>
-<button onclick="showSection('products')">Products</button>
-<button onclick="showSection('customers')">Customers</button>
+
+<button onclick="showSection('dashboard')">
+📊 Dashboard
+</button>
+
+<button onclick="showSection('billing')">
+🧾 Billing
+</button>
+
+<button onclick="showSection('products')">
+📦 Products
+</button>
+
+<button onclick="showSection('customers')">
+👤 Customers
+</button>
+
 </nav>
 
-<!-- DASHBOARD -->
+
+<!-- ================= DASHBOARD ================= -->
+
 <div id="dashboard" class="section active">
 
 <div class="grid">
+
 <div class="stat">
-<h3>Products</h3>
+<h3>📦 Products</h3>
 <h2 id="productCount">0</h2>
 </div>
 
 <div class="stat">
-<h3>Customers</h3>
+<h3>👤 Customers</h3>
 <h2 id="customerCount">0</h2>
 </div>
 
 <div class="stat">
-<h3>Total Sales</h3>
-<h2>₹<span id="salesTotal">0</span></h2>
+<h3>💰 Total Sales</h3>
+<h2>₹<span id="salesTotal">0.00</span></h2>
 </div>
+
 </div>
 
 <div class="card">
-<h2>Welcome to Chingari Billing</h2>
-<p>Billing, product stock and customer management.</p>
+
+<h2>🔥 Chingari Billing</h2>
+
+<p>Firebase powered billing system</p>
+
+<div class="status" id="firebaseStatus">
+⏳ Firebase connecting...
 </div>
 
 </div>
 
-<!-- BILLING -->
+</div>
+
+
+<!-- ================= BILLING ================= -->
+
 <div id="billing" class="section">
 
 <div class="card">
-<h2>Create Bill</h2>
 
-<input id="customerName" placeholder="Customer Name">
+<h2>🧾 Create Bill</h2>
 
-<input id="productNameBill" placeholder="Product Name">
+<input
+id="customerName"
+placeholder="Customer Name"
+>
 
-<input id="price" type="number" placeholder="Price">
+<input
+id="productNameBill"
+placeholder="Product Name"
+>
 
-<input id="quantity" type="number" value="1" placeholder="Quantity">
+<input
+id="price"
+type="number"
+min="0"
+placeholder="Price"
+>
 
-<input id="discount" type="number" value="0" placeholder="Discount">
+<input
+id="quantity"
+type="number"
+min="1"
+value="1"
+placeholder="Quantity"
+>
 
-<button onclick="addBill()">Add To Bill</button>
+<input
+id="discount"
+type="number"
+min="0"
+value="0"
+placeholder="Discount"
+>
+
+<button onclick="addBill()">
+➕ Add To Bill
+</button>
 
 <table>
+
 <thead>
+
 <tr>
 <th>Product</th>
 <th>Qty</th>
 <th>Price</th>
 <th>Total</th>
 </tr>
+
 </thead>
 
 <tbody id="billTable"></tbody>
+
 </table>
 
 <div class="total">
-Total: ₹<span id="billTotal">0</span>
+Total: ₹<span id="billTotal">0.00</span>
 </div>
 
-<button onclick="saveBill()">💾 Save Bill</button>
-<button onclick="window.print()">🖨️ Print Bill</button>
+<button onclick="saveBill()">
+💾 Save Bill
+</button>
+
+<button onclick="printBill()">
+🖨️ Print Bill
+</button>
 
 </div>
+
 </div>
 
-<!-- PRODUCTS -->
+
+<!-- ================= PRODUCTS ================= -->
+
 <div id="products" class="section">
 
 <div class="card">
 
-<h2>Add Product</h2>
+<h2>📦 Add Product</h2>
 
-<input id="productName" placeholder="Product Name">
+<input
+id="productName"
+placeholder="Product Name"
+>
 
-<input id="productPrice" type="number" placeholder="Selling Price">
+<input
+id="productPrice"
+type="number"
+min="0"
+placeholder="Selling Price"
+>
 
-<input id="productStock" type="number" placeholder="Stock">
+<input
+id="productStock"
+type="number"
+min="0"
+placeholder="Stock"
+>
 
-<button onclick="addProduct()">Add Product</button>
+<button onclick="addProduct()">
+➕ Add Product
+</button>
 
 </div>
 
+
 <div class="card">
 
-<h2>Products</h2>
+<h2>📦 Product List</h2>
 
 <table>
+
 <thead>
+
 <tr>
 <th>Name</th>
 <th>Price</th>
 <th>Stock</th>
 </tr>
+
 </thead>
 
 <tbody id="productTable"></tbody>
+
 </table>
 
 </div>
 
 </div>
 
-<!-- CUSTOMERS -->
+
+<!-- ================= CUSTOMERS ================= -->
+
 <div id="customers" class="section">
 
 <div class="card">
 
-<h2>Add Customer</h2>
+<h2>👤 Add Customer</h2>
 
-<input id="custName" placeholder="Customer Name">
+<input
+id="custName"
+placeholder="Customer Name"
+>
 
-<input id="custPhone" placeholder="Mobile Number">
+<input
+id="custPhone"
+type="tel"
+placeholder="Mobile Number"
+>
 
-<button onclick="addCustomer()">Add Customer</button>
+<button onclick="addCustomer()">
+➕ Add Customer
+</button>
 
 </div>
 
+
 <div class="card">
 
-<h2>Customers</h2>
+<h2>👥 Customer List</h2>
 
 <table>
+
 <thead>
+
 <tr>
 <th>Name</th>
 <th>Mobile</th>
 </tr>
+
 </thead>
 
 <tbody id="customerTable"></tbody>
+
 </table>
 
 </div>
@@ -242,260 +405,119 @@ Total: ₹<span id="billTotal">0</span>
 
 </div>
 
-<script>
 
-let products =
-JSON.parse(localStorage.getItem("products")) || [];
+<!-- ================= FIREBASE ================= -->
 
-let customers =
-JSON.parse(localStorage.getItem("customers")) || [];
+<script type="module">
 
-let bills =
-JSON.parse(localStorage.getItem("bills")) || [];
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+/* ================= FIREBASE CONFIG ================= */
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBw92dvMx7aUaPrDJsy3s330aGW1mestME",
+
+  authDomain: "chingari-billing.firebaseapp.com",
+
+  projectId: "chingari-billing",
+
+  storageBucket: "chingari-billing.firebasestorage.app",
+
+  messagingSenderId: "725939660191",
+
+  appId: "1:725939660191:web:27e6b783afa1c18f7609aa"
+
+};
+
+
+/* ================= FIREBASE START ================= */
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+
+/* ================= DATA ================= */
+
+let products = [];
+
+let customers = [];
+
+let bills = [];
 
 let currentBill = [];
 
-function showSection(id){
 
-document.querySelectorAll(".section")
-.forEach(x=>x.classList.remove("active"));
+/* ================= SECTION ================= */
 
-document.getElementById(id)
-.classList.add("active");
+window.showSection = function(id){
 
-updateDashboard();
+  document
+  .querySelectorAll(".section")
+  .forEach(section => {
+    section.classList.remove("active");
+  });
 
-}
+  document
+  .getElementById(id)
+  .classList.add("active");
 
-function addProduct(){
+  updateDashboard();
+};
 
-let name =
-document.getElementById("productName").value;
 
-let price =
-Number(document.getElementById("productPrice").value);
+/* ================= ADD PRODUCT ================= */
 
-let stock =
-Number(document.getElementById("productStock").value);
+window.addProduct = async function(){
 
-if(!name || !price){
-alert("Product name and price required");
-return;
-}
+  const name =
+    document
+    .getElementById("productName")
+    .value
+    .trim();
 
-products.push({
-name:name,
-price:price,
-stock:stock
-});
+  const price =
+    Number(
+      document
+      .getElementById("productPrice")
+      .value
+    );
 
-localStorage.setItem(
-"products",
-JSON.stringify(products)
-);
+  const stock =
+    Number(
+      document
+      .getElementById("productStock")
+      .value
+    );
 
-document.getElementById("productName").value="";
-document.getElementById("productPrice").value="";
-document.getElementById("productStock").value="";
 
-renderProducts();
-updateDashboard();
+  if(!name){
 
-alert("Product added");
+    alert("Product name required");
 
-}
+    return;
+  }
 
-function renderProducts(){
 
-let html="";
+  if(price <= 0){
 
-products.forEach(p=>{
+    alert("Enter valid product price");
 
-html+=`
-<tr>
-<td>${p.name}</td>
-<td>₹${p.price}</td>
-<td>${p.stock}</td>
-</tr>
-`;
+    return;
+  }
 
-});
 
-document.getElementById("productTable").innerHTML=html;
+  try{
 
-}
-
-function addCustomer(){
-
-let name =
-document.getElementById("custName").value;
-
-let phone =
-document.getElementById("custPhone").value;
-
-if(!name){
-alert("Customer name required");
-return;
-}
-
-customers.push({
-name:name,
-phone:phone
-});
-
-localStorage.setItem(
-"customers",
-JSON.stringify(customers)
-);
-
-document.getElementById("custName").value="";
-document.getElementById("custPhone").value="";
-
-renderCustomers();
-updateDashboard();
-
-alert("Customer added");
-
-}
-
-function renderCustomers(){
-
-let html="";
-
-customers.forEach(c=>{
-
-html+=`
-<tr>
-<td>${c.name}</td>
-<td>${c.phone}</td>
-</tr>
-`;
-
-});
-
-document.getElementById("customerTable")
-.innerHTML=html;
-
-}
-
-function addBill(){
-
-let name =
-document.getElementById("productNameBill").value;
-
-let price =
-Number(document.getElementById("price").value);
-
-let qty =
-Number(document.getElementById("quantity").value);
-
-let discount =
-Number(document.getElementById("discount").value);
-
-if(!name || !price || !qty){
-alert("Product, price and quantity required");
-return;
-}
-
-let total =
-(price * qty) - discount;
-
-currentBill.push({
-name:name,
-price:price,
-qty:qty,
-total:total
-});
-
-renderBill();
-
-}
-
-function renderBill(){
-
-let html="";
-let total=0;
-
-currentBill.forEach(item=>{
-
-total += item.total;
-
-html+=`
-<tr>
-<td>${item.name}</td>
-<td>${item.qty}</td>
-<td>₹${item.price}</td>
-<td>₹${item.total}</td>
-</tr>
-`;
-
-});
-
-document.getElementById("billTable")
-.innerHTML=html;
-
-document.getElementById("billTotal")
-.innerText=total;
-
-}
-
-function saveBill(){
-
-if(currentBill.length===0){
-alert("Bill is empty");
-return;
-}
-
-let total =
-currentBill.reduce(
-(sum,item)=>sum+item.total,0
-);
-
-bills.push({
-customer:
-document.getElementById("customerName").value,
-items:currentBill,
-total:total,
-date:new Date().toISOString()
-});
-
-localStorage.setItem(
-"bills",
-JSON.stringify(bills)
-);
-
-currentBill=[];
-
-renderBill();
-updateDashboard();
-
-alert("Bill saved successfully");
-
-}
-
-function updateDashboard(){
-
-document.getElementById("productCount")
-.innerText=products.length;
-
-document.getElementById("customerCount")
-.innerText=customers.length;
-
-let sales =
-bills.reduce(
-(sum,bill)=>sum+bill.total,0
-);
-
-document.getElementById("salesTotal")
-.innerText=sales;
-
-}
-
-renderProducts();
-renderCustomers();
-updateDashboard();
-
-</script>
-
-</body>
-</html>
+    await
