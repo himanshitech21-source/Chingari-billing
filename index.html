@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chingari Billing</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#17202a}
+header{background:#111827;color:#fff;padding:16px;text-align:center}header h1{margin:0;font-size:22px}
+nav{display:flex;gap:6px;overflow:auto;background:#fff;padding:8px;position:sticky;top:0;z-index:5;border-bottom:1px solid #ddd}
+nav button{border:0;background:#eef2f7;padding:10px 13px;border-radius:8px;white-space:nowrap}
+nav button.active{background:#111827;color:#fff}.wrap{max-width:1000px;margin:auto;padding:14px}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 5px #0001}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.stat{padding:14px;border-radius:10px;background:#f1f5f9}.stat b{font-size:22px;display:block;margin-top:4px}
+input,select{width:100%;padding:11px;border:1px solid #ccd3db;border-radius:8px;margin:5px 0 10px}
+button.primary{background:#111827;color:white;border:0;padding:11px 15px;border-radius:8px}
+button.danger{background:#fee2e2;color:#991b1b;border:0;padding:8px;border-radius:7px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}
+.right{text-align:right}.hidden{display:none}.total{font-size:22px;font-weight:bold}.due{color:#b91c1c}.paid{color:#15803d}
+@media(max-width:600px){table{font-size:12px}.wrap{padding:9px}}
+</style>
+</head>
+<body>
+<header><h1>🔥 Chingari Billing</h1><small>Simple Billing & Stock Management</small></header>
+<nav id="nav">
+<button data-page="dashboard">Dashboard</button><button data-page="billing">New Bill</button>
+<button data-page="products">Products</button><button data-page="customers">Customers</button><button data-page="sales">Sales</button>
+</nav>
+<div class="wrap">
+<section id="dashboard" class="page">
+<div class="grid">
+<div class="stat">Sales Today<b id="todaySales">₹0</b></div>
+<div class="stat">Total Sales<b id="totalSales">₹0</b></div>
+<div class="stat">Total Due<b id="totalDue">₹0</b></div>
+<div class="stat">Low Stock<b id="lowStock">0</b></div>
+</div>
+<div class="card"><h3>Quick Start</h3><p>Add products first, then create a bill. Data is saved in this browser.</p></div>
+</section>
+
+<section id="products" class="page hidden">
+<div class="card"><h3>Add Product</h3>
+<div class="grid"><input id="pname" placeholder="Product name"><input id="pprice" type="number" placeholder="Sale price">
+<input id="pstock" type="number" placeholder="Stock"><input id="plimit" type="number" placeholder="Low stock limit"></div>
+<button class="primary" onclick="addProduct()">Add Product</button></div>
+<div class="card"><h3>Products</h3><div id="productTable"></div></div>
+</section>
+
+<section id="customers" class="page hidden">
+<div class="card"><h3>Add Customer</h3>
+<div class="grid"><input id="cname" placeholder="Customer name"><input id="cmobile" placeholder="Mobile"><input id="caddress" placeholder="Address"></div>
+<button class="primary" onclick="addCustomer()">Add Customer</button></div>
+<div class="card"><h3>Customers</h3><div id="customerTable"></div></div>
+</section>
+
+<section id="billing" class="page hidden">
+<div class="card"><h3>New Bill</h3>
+<div class="grid"><select id="bcustomer"></select><input id="bmobile" placeholder="Mobile (optional)"></div>
+<div class="grid"><select id="bproduct"></select><input id="bqty" type="number" value="1" min="1"><button class="primary" onclick="addItem()">Add Item</button></div>
+<div id="cart"></div>
+<hr><div class="grid"><input id="bpaid" type="number" placeholder="Paid amount"><div class="total">Total: <span id="btotal">₹0</span></div></div>
+<button class="primary" onclick="saveBill()">Save Bill & Print</button>
+</div>
+</section>
+
+<section id="sales" class="page hidden">
+<div class="card"><h3>Sales History</h3><div id="salesTable"></div></div>
+</section>
+</div>
+
+<script>
+const key="chingariBilling_v1";
+let db=JSON.parse(localStorage.getItem(key)||'{"products":[],"customers":[],"bills":[]}');
+let cart=[];
+function save(){localStorage.setItem(key,JSON.stringify(db));render()}
+function money(n){return "₹"+Number(n||0).toFixed(2)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function render(){
+ document.getElementById("todaySales").textContent=money(db.bills.filter(b=>b.date.slice(0,10)==new Date().toISOString().slice(0,10)).reduce((a,b)=>a+b.total,0));
+ document.getElementById("totalSales").textContent=money(db.bills.reduce((a,b)=>a+b.total,0));
+ document.getElementById("totalDue").textContent=money(db.bills.reduce((a,b)=>a+Math.max(0,b.total-b.paid),0));
+ document.getElementById("lowStock").textContent=db.products.filter(p=>p.stock<=p.limit).length;
+ document.getElementById("productTable").innerHTML=db.products.length?`<table><tr><th>Product</th><th>Price</th><th>Stock</th><th></th></tr>${db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${money(p.price)}</td><td>${p.stock}${p.stock<=p.limit?' ⚠️':''}</td><td><button class="danger" onclick="delProduct('${p.id}')">Delete</button></td></tr>`).join("")}</table>`:"No products";
+ document.getElementById("customerTable").innerHTML=db.customers.length?`<table><tr><th>Name</th><th>Mobile</th><th>Address</th></tr>${db.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.mobile)}</td><td>${esc(c.address)}</td></tr>`).join("")}</table>`:"No customers";
+ document.getElementById("bcustomer").innerHTML='<option value="">Walk-in Customer</option>'+db.customers.map(c=>`<option value="${c.id}">${esc(c.name)} - ${esc(c.mobile)}</option>`).join("");
+ document.getElementById("bproduct").innerHTML=db.products.map(p=>`<option value="${p.id}">${esc(p.name)} - ${money(p.price)} (Stock ${p.stock})</option>`).join("");
+ document.getElementById("salesTable").innerHTML=db.bills.length?`<table><tr><th>Bill</th><th>Date</th><th>Customer</th><th>Total</th><th>Due</th></tr>${db.bills.slice().reverse().map(b=>`<tr><td>${b.id}</td><td>${new Date(b.date).toLocaleString()}</td><td>${esc(b.customer)}</td><td>${money(b.total)}</td><td class="${b.total-b.paid?'due':'paid'}">${money(Math.max(0,b.total-b.paid))}</td></tr>`).join("")}</table>`:"No bills";
+ renderCart();
+}
+function addProduct(){let name=pname.value.trim(),price=+pprice.value,stock=+pstock.value,limit=+plimit.value||5;if(!name||price<0)return alert("Product name and price required");db.products.push({id:"P"+Date.now(),name,price,stock,limit});pname.value=pprice.value=pstock.value=plimit.value="";save()}
+function delProduct(id){db.products=db.products.filter(p=>p.id!=id);save()}
+function addCustomer(){let name=cname.value.trim();if(!name)return alert("Customer name required");db.customers.push({id:"C"+Date.now(),name,mobile:cmobile.value,address:caddress.value});cname.value=cmobile.value=caddress.value="";save()}
+function addItem(){let p=db.products.find(x=>x.id==bproduct.value),q=+bqty.value;if(!p||q<1)return alert("Select product and quantity");if(q>p.stock)return alert("Not enough stock");let old=cart.find(x=>x.id==p.id);if(old)old.qty+=q;else cart.push({id:p.id,name:p.name,price:p.price,qty:q});renderCart()}
+function renderCart(){let total=cart.reduce((a,x)=>a+x.price*x.qty,0);document.getElementById("btotal").textContent=money(total);document.getElementById("cart").innerHTML=cart.length?`<table><tr><th>Product</th><th>Qty</th><th>Amount</th><th></th></tr>${cart.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.price*x.qty)}</td><td><button class="danger" onclick="cart.splice(${i},1);renderCart()">X</button></td></tr>`).join("")}</table>`:"No items added";}
+function saveBill(){if(!cart.length)return alert("Add an item first");let total=cart.reduce((a,x)=>a+x.price*x.qty,0),paid=+bpaid.value||0;if(paid>total)return alert("Paid amount cannot exceed total");let c=db.customers.find(x=>x.id==bcustomer.value),bill={id:"INV"+Date.now(),date:new Date().toISOString(),customer:c?.name||"Walk-in Customer",mobile:c?.mobile||bmobile.value,total,paid,items:cart.map(x=>({...x}))};db.bills.push(bill);cart.forEach(x=>{let p=db.products.find(p=>p.id==x.id);p.stock-=x.qty});save();printBill(bill);cart=[];bpaid.value="";renderCart()}
+function printBill(b){let w=window.open("","_blank");w.document.write(`<html><head><title>${b.id}</title><style>body{font-family:Arial;padding:20px;max-width:600px;margin:auto}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #ddd}.r{text-align:right}</style></head><body><h2>🔥 Chingari Billing</h2><p>Invoice: ${b.id}<br>Date: ${new Date(b.date).toLocaleString()}<br>Customer: ${esc(b.customer)} ${b.mobile?'<br>Mobile: '+esc(b.mobile):''}</p><table><tr><th>Item</th><th>Qty</th><th class="r">Amount</th></tr>${b.items.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td class="r">${money(x.price*x.qty)}</td></tr>`).join("")}</table><h3 class="r">Total: ${money(b.total)}</h3><p class="r">Paid: ${money(b.paid)}<br>Due: ${money(b.total-b.paid)}</p><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()}
+document.querySelectorAll("nav button").forEach(btn=>btn.onclick=()=>{document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));document.getElementById(btn.dataset.page).classList.remove("hidden");document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));btn.classList.add("active")});
+document.querySelector('nav button[data-page="dashboard"]').classList.add("active");render();
+</script>
+</body></html>
